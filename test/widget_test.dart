@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:enlace_seguro/core/api/api_exception.dart';
 import 'package:enlace_seguro/core/theme/app_colors.dart';
+import 'package:enlace_seguro/core/utils/defang.dart';
 import 'package:enlace_seguro/core/utils/tiempo.dart';
 import 'package:enlace_seguro/features/analisis/data/analisis.dart';
 import 'package:enlace_seguro/features/auth/data/password_strength.dart';
@@ -57,5 +58,9 @@ void main() {
     expect(a.redirige, isTrue);
     expect(a.captura, isNull);
     expect(Estado.parse('procesando').esFinal, isFalse);
+  });
+
+  test('Enlace desactivado para compartir', () {
+    expect(defang('https://bbva-mx.com/login'), 'hxxps://bbva-mx[.]com/login');
   });
 }

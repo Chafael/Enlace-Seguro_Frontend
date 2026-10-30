@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/api/api_exception.dart';
+import '../../../core/compartir/texto_compartido.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text.dart';
 import '../../../core/widgets/loading_button.dart';
@@ -31,6 +32,9 @@ class _InicioScreenState extends ConsumerState<InicioScreen> {
   bool _loading = false;
   String? _error;
 
+  /// true si el texto del campo llegó desde "Compartir" de otra app.
+  bool _compartido = false;
+
   @override
   void initState() {
     super.initState();
@@ -38,6 +42,22 @@ class _InicioScreenState extends ConsumerState<InicioScreen> {
     if (widget.enfocar) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _foco.requestFocus());
     }
+    WidgetsBinding.instance.addPostFrameCallback((_) => _tomarCompartido());
+  }
+
+  /// Pone en el campo el texto que llegó de WhatsApp o SMS y lo marca
+  /// como usado. No lo analiza solo: el usuario revisa y toca Analizar.
+  void _tomarCompartido() {
+    final texto = ref.read(textoCompartidoProvider);
+    if (texto == null || !mounted) return;
+    ref.read(textoCompartidoProvider.notifier).state = null;
+    _texto.text = texto.length > _maxCaracteres
+        ? texto.substring(0, _maxCaracteres)
+        : texto;
+    setState(() {
+      _compartido = true;
+      _error = null;
+    });
   }
 
   @override
@@ -70,6 +90,7 @@ class _InicioScreenState extends ConsumerState<InicioScreen> {
     try {
       final creado = await ref.read(analisisRepositoryProvider).crear(_texto.text);
       _texto.clear();
+      _compartido = false;
       if (!mounted) return;
       await context.push('/analisis/${creado.id}');
       // Al volver, el historial ya trae el análisis nuevo.
@@ -99,6 +120,12 @@ class _InicioScreenState extends ConsumerState<InicioScreen> {
   @override
   Widget build(BuildContext context) {
     final historial = ref.watch(historialProvider);
+    // Si la app ya estaba en Inicio cuando llegó un texto compartido.
+    ref.listen(textoCompartidoProvider, (_, texto) {
+      if (texto != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) => _tomarCompartido());
+      }
+    });
 
     return RefreshIndicator(
       onRefresh: () => ref.refresh(historialProvider.future),
@@ -112,6 +139,29 @@ class _InicioScreenState extends ConsumerState<InicioScreen> {
           Text('Pega el enlace o el mensaje completo tal como te llegó.',
               style: AppText.small),
           const SizedBox(height: 12),
+          if (_compartido) ...[
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.line),
+              ),
+              child: Row(
+                children: [
+                  const Icon(LucideIcons.share2, size: 18, color: AppColors.primary),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Recibimos un enlace compartido. Revísalo y toca Analizar enlace.',
+                      style: AppText.small.copyWith(color: AppColors.textPrimary),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
           TextField(
             controller: _texto,
             focusNode: _foco,
@@ -152,7 +202,12 @@ class _InicioScreenState extends ConsumerState<InicioScreen> {
               ),
               const Spacer(),
               TextButton(
-                onPressed: _texto.text.isEmpty ? null : _texto.clear,
+                onPressed: _texto.text.isEmpty
+                    ? null
+                    : () {
+                        _texto.clear();
+                        setState(() => _compartido = false);
+                      },
                 style: TextButton.styleFrom(foregroundColor: AppColors.textSecondary),
                 child: const Text('Borrar'),
               ),

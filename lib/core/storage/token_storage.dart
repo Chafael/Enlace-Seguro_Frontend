@@ -13,6 +13,16 @@ class TokenStorage {
   Future<void> save(String token) => _storage.write(key: _key, value: token);
 
   Future<void> clear() => _storage.delete(key: _key);
+
+  /// Marca de que el usuario ya vio la Bienvenida. No se borra al cerrar
+  /// sesión: la Bienvenida solo se muestra la primera vez.
+  static const _bienvenidaKey = 'bienvenida_vista';
+
+  Future<bool> bienvenidaVista() async =>
+      await _storage.read(key: _bienvenidaKey) == '1';
+
+  Future<void> marcarBienvenidaVista() =>
+      _storage.write(key: _bienvenidaKey, value: '1');
 }
 
 final tokenStorageProvider = Provider<TokenStorage>(

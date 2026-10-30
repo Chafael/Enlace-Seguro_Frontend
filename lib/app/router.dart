@@ -8,13 +8,14 @@ import '../features/auth/state/auth_controller.dart';
 import '../features/auth/ui/login_screen.dart';
 import '../features/auth/ui/registro_listo_screen.dart';
 import '../features/auth/ui/registro_screen.dart';
+import '../features/bienvenida/ui/bienvenida_screen.dart';
 import '../features/bienvenida/ui/splash_screen.dart';
 import '../features/cuenta/ui/cuenta_screen.dart';
 import '../features/historial/ui/historial_screen.dart';
 import 'app_shell.dart';
 
 /// Rutas a las que se entra sin sesión.
-const _publicas = {'/login', '/registro', '/registro/listo'};
+const _publicas = {'/bienvenida', '/login', '/registro', '/registro/listo'};
 
 final routerProvider = Provider<GoRouter>((ref) {
   // Cada vez que cambia la sesión, el router vuelve a evaluar "redirect".
@@ -26,13 +27,18 @@ final routerProvider = Provider<GoRouter>((ref) {
     initialLocation: '/splash',
     refreshListenable: refresh,
     redirect: (context, state) {
-      final status = ref.read(authControllerProvider).status;
+      final auth = ref.read(authControllerProvider);
+      final status = auth.status;
       final location = state.matchedLocation;
 
       if (status == AuthStatus.checking) {
         return location == '/splash' ? null : '/splash';
       }
       if (status == AuthStatus.signedOut) {
+        if (!auth.bienvenidaVista) {
+          return location == '/bienvenida' ? null : '/bienvenida';
+        }
+        if (location == '/bienvenida') return '/login';
         return _publicas.contains(location) ? null : '/login';
       }
       // Con sesión: no tiene sentido ver splash, login o registro.
@@ -43,6 +49,7 @@ final routerProvider = Provider<GoRouter>((ref) {
     },
     routes: [
       GoRoute(path: '/splash', builder: (_, _) => const SplashScreen()),
+      GoRoute(path: '/bienvenida', builder: (_, _) => const BienvenidaScreen()),
       GoRoute(
         path: '/login',
         builder: (_, state) =>

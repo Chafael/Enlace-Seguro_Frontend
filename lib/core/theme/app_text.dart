@@ -1,16 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import 'app_colors.dart';
 
 /// Estilos de texto del diseño. Plex Sans para la interfaz y Plex Mono
-/// para enlaces, etiquetas de sección, fechas y cronómetros.
+/// para enlaces, etiquetas de sección, fechas y cronómetros. Las fuentes
+/// están en assets/fonts, así funcionan sin internet.
 class AppText {
   AppText._();
 
+  /// Nombres declarados en pubspec.yaml (sección fonts).
+  static const sans = 'IBMPlexSans';
+  static const monoFamily = 'IBMPlexMono';
+
   static TextStyle _sans(double size, double height, FontWeight weight,
           [Color color = AppColors.textPrimary]) =>
-      GoogleFonts.ibmPlexSans(
+      TextStyle(
+        fontFamily: sans,
         fontSize: size,
         height: height / size,
         fontWeight: weight,
@@ -26,7 +31,8 @@ class AppText {
   static final number = _sans(32, 38, FontWeight.w600);
 
   /// Etiqueta de sección: "RECIENTES", "ENLACE ANALIZADO".
-  static final sectionLabel = GoogleFonts.ibmPlexMono(
+  static const sectionLabel = TextStyle(
+    fontFamily: monoFamily,
     fontSize: 11,
     fontWeight: FontWeight.w500,
     letterSpacing: 1.2,
@@ -34,7 +40,8 @@ class AppText {
   );
 
   /// Enlaces mostrados como bloque de código.
-  static final mono = GoogleFonts.ibmPlexMono(
+  static const mono = TextStyle(
+    fontFamily: monoFamily,
     fontSize: 13,
     height: 18 / 13,
     color: AppColors.textSecondary,

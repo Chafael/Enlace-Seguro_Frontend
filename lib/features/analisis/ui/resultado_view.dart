@@ -6,10 +6,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../../core/api/api_exception.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text.dart';
+import '../../../core/utils/defang.dart';
 import '../../../core/widgets/url_box.dart';
 import '../data/analisis.dart';
 import '../data/analisis_repository.dart';
@@ -28,6 +30,21 @@ class ResultadoView extends StatefulWidget {
 class _ResultadoViewState extends State<ResultadoView> {
   bool _verCaptura = false;
 
+  /// Comparte el resultado como texto. El enlace va "desactivado"
+  /// (hxxps://sitio[.]com) para que nadie lo abra por accidente.
+  Future<void> _compartir(Analisis a, VerdictStyle style) {
+    final texto = StringBuffer()
+      ..writeln('Revisé este enlace con EnlaceSeguro: ${style.label}.')
+      ..writeln(defang(a.url));
+    if (a.razones.isNotEmpty) {
+      texto.writeln();
+      for (final r in a.razones) {
+        texto.writeln('- $r');
+      }
+    }
+    return SharePlus.instance.share(ShareParams(text: texto.toString().trim()));
+  }
+
   @override
   Widget build(BuildContext context) {
     final a = widget.analisis;
@@ -37,7 +54,10 @@ class _ResultadoViewState extends State<ResultadoView> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
       children: [
-        _Header(onBack: () => context.canPop() ? context.pop() : context.go('/inicio')),
+        _Header(
+          onBack: () => context.canPop() ? context.pop() : context.go('/inicio'),
+          onShare: esError ? null : () => _compartir(a, style),
+        ),
         const SizedBox(height: 16),
         _BloqueVeredicto(analisis: a, style: style),
         if (a.desdeCache) ...[
@@ -101,9 +121,10 @@ class _ResultadoViewState extends State<ResultadoView> {
 }
 
 class _Header extends StatelessWidget {
-  const _Header({required this.onBack});
+  const _Header({required this.onBack, this.onShare});
 
   final VoidCallback onBack;
+  final VoidCallback? onShare;
 
   @override
   Widget build(BuildContext context) {
@@ -126,6 +147,20 @@ class _Header extends StatelessWidget {
             ),
           ),
           Text('Resultado', style: AppText.h2),
+          if (onShare != null)
+            Align(
+              alignment: Alignment.centerRight,
+              child: IconButton.outlined(
+                tooltip: 'Compartir resultado',
+                onPressed: onShare,
+                icon: const Icon(LucideIcons.share2, size: 18),
+                style: IconButton.styleFrom(
+                  foregroundColor: AppColors.textSecondary,
+                  side: const BorderSide(color: AppColors.line),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+              ),
+            ),
         ],
       ),
     );
