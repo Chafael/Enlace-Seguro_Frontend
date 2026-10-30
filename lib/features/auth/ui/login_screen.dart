@@ -145,8 +145,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   onPressed: _blocked ? null : _submit,
                 ),
                 const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     Text('¿No tienes cuenta?', style: AppText.small),
                     TextButton(
@@ -162,8 +163,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     const Icon(LucideIcons.lock,
                         size: 14, color: AppColors.textTertiary),
                     const SizedBox(width: 6),
-                    Text('Tu sesión se guarda cifrada en este dispositivo.',
-                        style: AppText.caption),
+                    Flexible(
+                      child: Text(
+                        'Tu sesión se guarda cifrada en este dispositivo.',
+                        style: AppText.caption,
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
                   ],
                 ),
               ],

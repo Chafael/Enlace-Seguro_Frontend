@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 import 'app/router.dart';
 import 'core/theme/app_theme.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  // Nombres de meses en español para las fechas ("oct 2026").
+  await initializeDateFormatting('es');
   runApp(const ProviderScope(child: EnlaceSeguroApp()));
 }
 
