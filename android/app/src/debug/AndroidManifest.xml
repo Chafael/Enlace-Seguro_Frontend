@@ -4,4 +4,9 @@
          to allow setting breakpoints, to provide hot reload, etc.
     -->
     <uses-permission android:name="android.permission.INTERNET"/>
+
+    <!-- Solo en debug: la API corre en la PC por HTTP (puerto 8000).
+         La versión release no hereda esto y exige HTTPS. -->
+    <application
+        android:usesCleartextTraffic="true" />
 </manifest>
